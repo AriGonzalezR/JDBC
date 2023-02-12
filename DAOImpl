@@ -1,0 +1,38 @@
+public class CuentaDAOImpl implements CuentaDAO{
+	Connection con;
+	PreparedStatement ps;
+	ResultSet rs;
+	public CuentaDAOImpl(Connection con) {
+		this.con=con;
+	}
+	public int insertar(CuentaVO cuenta) {
+		try {
+			ps=con.prepareStatement("insert into cuentas(numeroCuenta,fechacreacion,saldo)"+
+					"values(?,?,?)");
+			ps.setString(1,cuenta.getNumerocuenta());
+			ps.setDate(2, Date.valueOf(cuenta.getFechacreacion()));
+			ps.setDouble(3, cuenta.getSaldo());
+			return ps.executeUpdate();
+		} catch (SQLException e) {
+			if(e.getErrorCode()==1062) {
+				System.out.println("Ese numero de cuenta ya existe");
+				return 1;
+			}
+			System.out.println("Error al insertar parámetros "+ e.getErrorCode());
+		}
+		return 0;
+	}
+	public Optional<CuentaVO> findByNumero(String numerocuenta) {
+		try {
+			ps=con.prepareStatement("select * from cuentas where numerocuenta=?");
+			ps.setString(1, numerocuenta);
+			rs=ps.executeQuery();
+			if(rs.next()) {
+				return Optional.of(new CuentaVO(rs.getInt(1), rs.getString(2), rs.getDate(3).toLocalDate(),rs.getDouble(4)));
+			}else
+				return Optional.of(new CuentaVO());
+		} catch (SQLException e) {
+			System.out.println("Error en la busqueda "+ e.getErrorCode());
+		}
+		return Optional.empty();
+	}
